@@ -66,64 +66,80 @@ export default function App() {
     setError(null);
   };
 
-  const applySuggestion = (suggestion: Suggestion) => {
-    // Basic replacement - in a real app this would be more sophisticated
-    // for now we just show the result from Gemini which is already corrected
-  };
-
   return (
-    <div className="min-h-screen flex flex-col font-sans">
+    <div className="min-h-screen flex flex-col font-sans selection:bg-brand-100 selection:text-brand-700 relative">
+      <div className="grain" />
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white">
-              <Sparkles size={20} />
+      <header className="bg-paper/80 backdrop-blur-md border-b border-brand-100 sticky top-0 z-20">
+        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-brand-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
+              <Sparkles size={22} />
             </div>
-            <h1 className="text-xl font-bold tracking-tight text-slate-900">Vani</h1>
-            <span className="text-xs font-medium px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full">Beta</span>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight text-brand-700">Vani</h1>
+              <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-brand-500/60 leading-none">Vernacular AI</p>
+            </div>
           </div>
           
+          <nav className="hidden md:flex items-center gap-8">
+            <a href="#" className="text-sm font-medium text-brand-700/60 hover:text-brand-700 transition-colors">Workspace</a>
+            <a href="#" className="text-sm font-medium text-brand-700/60 hover:text-brand-700 transition-colors">Linguistic Guide</a>
+            <a href="#" className="text-sm font-medium text-brand-700/60 hover:text-brand-700 transition-colors">API</a>
+          </nav>
+
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              <Languages size={16} />
-              <span>Vernacular Assistant</span>
-            </div>
+            <span className="text-xs font-bold px-3 py-1 bg-brand-100 text-brand-700 rounded-full">Beta</span>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="flex-1 max-w-6xl mx-auto w-full p-6 md:p-12 grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Left Column: Input & Controls */}
-        <div className="lg:col-span-7 space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="p-4 border-b border-slate-100 flex flex-wrap gap-4 items-center justify-between bg-slate-50/50">
-              <div className="flex gap-2">
-                <select 
-                  value={language.code}
-                  onChange={(e) => setLanguage(INDIAN_LANGUAGES.find(l => l.code === e.target.value) || INDIAN_LANGUAGES[0])}
-                  className="text-sm font-medium bg-white border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                >
-                  {INDIAN_LANGUAGES.map(lang => (
-                    <option key={lang.code} value={lang.code}>{lang.name} ({lang.native})</option>
-                  ))}
-                </select>
+        <div className="lg:col-span-7 space-y-8">
+          <div className="space-y-4">
+            <h2 className="text-5xl md:text-6xl font-bold text-brand-700 leading-[1.1] tracking-tight">
+              Refine your <span className="italic font-normal font-serif">vernacular</span> voice.
+            </h2>
+            <p className="text-lg text-brand-700/60 max-w-lg leading-relaxed">
+              Vani understands the nuances of Indian languages, helping you write with clarity, precision, and cultural authenticity.
+            </p>
+          </div>
 
-                <select 
-                  value={tone.id}
-                  onChange={(e) => setTone(TONES.find(t => t.id === e.target.value) || TONES[0])}
-                  className="text-sm font-medium bg-white border border-slate-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                >
-                  {TONES.map(t => (
-                    <option key={t.id} value={t.id}>{t.name} Tone</option>
-                  ))}
-                </select>
+          <div className="bg-white rounded-[32px] shadow-2xl shadow-black/[0.03] border border-brand-100 overflow-hidden transition-all duration-500 hover:shadow-black/[0.05]">
+            <div className="p-5 border-b border-brand-50 flex flex-wrap gap-4 items-center justify-between bg-brand-50/20">
+              <div className="flex gap-3">
+                <div className="relative">
+                  <select 
+                    value={language.code}
+                    onChange={(e) => setLanguage(INDIAN_LANGUAGES.find(l => l.code === e.target.value) || INDIAN_LANGUAGES[0])}
+                    className="appearance-none text-sm font-semibold bg-white border border-brand-100 rounded-full pl-4 pr-10 py-2 focus:outline-none focus:ring-4 focus:ring-brand-500/10 transition-all cursor-pointer hover:border-brand-200"
+                  >
+                    {INDIAN_LANGUAGES.map(lang => (
+                      <option key={lang.code} value={lang.code}>{lang.name} ({lang.native})</option>
+                    ))}
+                  </select>
+                  <Languages size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-500 pointer-events-none" />
+                </div>
+
+                <div className="relative">
+                  <select 
+                    value={tone.id}
+                    onChange={(e) => setTone(TONES.find(t => t.id === e.target.value) || TONES[0])}
+                    className="appearance-none text-sm font-semibold bg-white border border-brand-100 rounded-full pl-4 pr-10 py-2 focus:outline-none focus:ring-4 focus:ring-brand-500/10 transition-all cursor-pointer hover:border-brand-200"
+                  >
+                    {TONES.map(t => (
+                      <option key={t.id} value={t.id}>{t.name} Tone</option>
+                    ))}
+                  </select>
+                  <TypeIcon size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-500 pointer-events-none" />
+                </div>
               </div>
 
               <div className="flex gap-2">
                 <button 
                   onClick={handleReset}
-                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="p-2.5 text-brand-500/40 hover:text-brand-500 hover:bg-brand-50 rounded-full transition-all"
                   title="Reset"
                 >
                   <RotateCcw size={18} />
@@ -135,34 +151,34 @@ export default function App() {
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder={`Type or paste your ${language.name} text here...`}
-                className="w-full h-80 p-6 text-lg resize-none focus:outline-none placeholder:text-slate-300"
+                placeholder={`Begin writing in ${language.name}...`}
+                className="w-full h-[400px] p-8 text-xl leading-relaxed resize-none focus:outline-none placeholder:text-brand-100 font-medium"
                 style={{ direction: 'ltr' }}
               />
               
-              <div className="absolute bottom-4 right-4 flex items-center gap-4">
-                <span className="text-xs text-slate-400 font-mono">
-                  {text.length} characters
+              <div className="absolute bottom-6 right-6 flex items-center gap-6">
+                <span className="text-[10px] uppercase tracking-widest text-brand-500/40 font-bold">
+                  {text.length} chars
                 </span>
                 <button
                   onClick={handleAnalyze}
                   disabled={isAnalyzing || !text.trim()}
                   className={cn(
-                    "flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold transition-all shadow-lg shadow-brand-500/20",
+                    "flex items-center gap-2 px-8 py-3.5 rounded-full font-bold transition-all shadow-xl",
                     isAnalyzing || !text.trim() 
-                      ? "bg-slate-100 text-slate-400 cursor-not-allowed" 
-                      : "bg-brand-600 text-white hover:bg-brand-700 active:scale-95"
+                      ? "bg-brand-50 text-brand-200 cursor-not-allowed shadow-none" 
+                      : "bg-brand-500 text-white hover:bg-brand-600 active:scale-95 shadow-brand-500/20"
                   )}
                 >
                   {isAnalyzing ? (
                     <>
-                      <Loader2 size={18} className="animate-spin" />
-                      Analyzing...
+                      <Loader2 size={20} className="animate-spin" />
+                      Refining...
                     </>
                   ) : (
                     <>
-                      <Sparkles size={18} />
-                      Improve Writing
+                      <Sparkles size={20} />
+                      Refine Writing
                     </>
                   )}
                 </button>
@@ -172,12 +188,12 @@ export default function App() {
 
           {error && (
             <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3 text-red-700"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="p-5 bg-red-50 border border-red-100 rounded-[24px] flex items-start gap-4 text-red-700"
             >
-              <AlertCircle size={20} className="shrink-0 mt-0.5" />
-              <p className="text-sm">{error}</p>
+              <AlertCircle size={22} className="shrink-0 mt-0.5" />
+              <p className="text-sm font-medium">{error}</p>
             </motion.div>
           )}
 
@@ -185,26 +201,26 @@ export default function App() {
           <AnimatePresence>
             {result && (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
+                exit={{ opacity: 0, y: 30 }}
                 className="space-y-6"
               >
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                  <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-brand-50/30">
-                    <div className="flex items-center gap-2 text-brand-700 font-semibold">
-                      <CheckCircle2 size={18} />
-                      <span>Improved Text</span>
+                <div className="bg-white rounded-[32px] shadow-2xl shadow-black/[0.03] border border-brand-100 overflow-hidden">
+                  <div className="p-5 border-b border-brand-50 flex items-center justify-between bg-brand-50/10">
+                    <div className="flex items-center gap-3 text-brand-600 font-bold">
+                      <CheckCircle2 size={20} />
+                      <span className="text-sm uppercase tracking-widest">Polished Version</span>
                     </div>
                     <button 
                       onClick={handleCopy}
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all"
+                      className="flex items-center gap-2 px-5 py-2 text-xs font-bold uppercase tracking-widest text-brand-600 hover:bg-brand-50 rounded-full border border-brand-100 transition-all"
                     >
-                      {copied ? <Check size={16} className="text-green-600" /> : <Copy size={16} />}
-                      {copied ? 'Copied!' : 'Copy'}
+                      {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+                      {copied ? 'Copied' : 'Copy Text'}
                     </button>
                   </div>
-                  <div className="p-6 text-lg leading-relaxed text-slate-800 whitespace-pre-wrap">
+                  <div className="p-8 text-xl leading-relaxed text-brand-700 whitespace-pre-wrap font-medium">
                     {result.correctedText}
                   </div>
                 </div>
@@ -214,32 +230,32 @@ export default function App() {
         </div>
 
         {/* Right Column: Suggestions & Insights */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full min-h-[400px]">
-            <div className="p-4 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50">
-              <MessageSquare size={18} className="text-slate-500" />
-              <h2 className="font-semibold text-slate-900">Suggestions & Insights</h2>
+        <div className="lg:col-span-5 space-y-8">
+          <div className="bg-white rounded-[32px] shadow-2xl shadow-black/[0.03] border border-brand-100 flex flex-col h-full min-h-[500px]">
+            <div className="p-6 border-b border-brand-50 flex items-center gap-3 bg-brand-50/10">
+              <MessageSquare size={20} className="text-brand-500" />
+              <h2 className="font-bold text-lg text-brand-700">Linguistic Insights</h2>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {!result && !isAnalyzing && (
-                <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
-                    <TypeIcon size={32} />
+                <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-6">
+                  <div className="w-20 h-20 bg-brand-50 rounded-full flex items-center justify-center text-brand-200">
+                    <TypeIcon size={40} />
                   </div>
-                  <div>
-                    <p className="text-slate-600 font-medium">No analysis yet</p>
-                    <p className="text-sm text-slate-400">Enter some text and click "Improve Writing" to see suggestions.</p>
+                  <div className="space-y-2">
+                    <p className="text-brand-700 font-bold text-lg">Awaiting Input</p>
+                    <p className="text-sm text-brand-700/40 max-w-[200px] mx-auto">Your linguistic analysis and suggestions will appear here.</p>
                   </div>
                 </div>
               )}
 
               {isAnalyzing && (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="animate-pulse space-y-2">
-                      <div className="h-4 bg-slate-100 rounded w-1/4"></div>
-                      <div className="h-20 bg-slate-50 rounded-xl"></div>
+                    <div key={i} className="animate-pulse space-y-3">
+                      <div className="h-3 bg-brand-50 rounded-full w-1/3"></div>
+                      <div className="h-24 bg-brand-50/50 rounded-[24px]"></div>
                     </div>
                   ))}
                 </div>
@@ -247,37 +263,43 @@ export default function App() {
 
               {result && (
                 <>
-                  <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-xl">
-                    <div className="flex items-center gap-2 text-blue-700 font-medium mb-1">
-                      <Info size={16} />
-                      <span className="text-sm">Summary</span>
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="p-6 bg-brand-50/50 border border-brand-100 rounded-[24px] relative overflow-hidden"
+                  >
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                      <Info size={48} />
                     </div>
-                    <p className="text-sm text-blue-800 leading-relaxed">
+                    <div className="flex items-center gap-2 text-brand-600 font-bold mb-2">
+                      <span className="text-xs uppercase tracking-widest">Overview</span>
+                    </div>
+                    <p className="text-sm text-brand-700/80 leading-relaxed font-medium">
                       {result.summary}
                     </p>
-                  </div>
+                  </motion.div>
 
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
-                      Detailed Corrections ({result.suggestions.length})
+                  <div className="space-y-4">
+                    <h3 className="text-[10px] font-black text-brand-500/40 uppercase tracking-[0.2em] px-1">
+                      Detailed Refinements ({result.suggestions.length})
                     </h3>
                     {result.suggestions.map((suggestion, idx) => (
                       <motion.div
                         key={idx}
-                        initial={{ opacity: 0, x: 10 }}
+                        initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.1 }}
                         className={cn(
-                          "p-4 rounded-xl border transition-all hover:shadow-md",
-                          suggestion.type === 'grammar' && "bg-blue-50/30 border-blue-100",
-                          suggestion.type === 'spelling' && "bg-red-50/30 border-red-100",
-                          suggestion.type === 'style' && "bg-purple-50/30 border-purple-100",
-                          suggestion.type === 'tone' && "bg-orange-50/30 border-orange-100"
+                          "p-5 rounded-[24px] border transition-all hover:translate-x-1",
+                          suggestion.type === 'grammar' && "bg-blue-50/20 border-blue-100/50",
+                          suggestion.type === 'spelling' && "bg-red-50/20 border-red-100/50",
+                          suggestion.type === 'style' && "bg-purple-50/20 border-purple-100/50",
+                          suggestion.type === 'tone' && "bg-orange-50/20 border-orange-100/50"
                         )}
                       >
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between mb-3">
                           <span className={cn(
-                            "text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full",
+                            "text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full",
                             suggestion.type === 'grammar' && "bg-blue-100 text-blue-700",
                             suggestion.type === 'spelling' && "bg-red-100 text-red-700",
                             suggestion.type === 'style' && "bg-purple-100 text-purple-700",
@@ -287,14 +309,14 @@ export default function App() {
                           </span>
                         </div>
                         
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-center gap-2 text-sm">
-                            <span className="line-through text-slate-400">{suggestion.original}</span>
-                            <ChevronRight size={14} className="text-slate-300" />
-                            <span className="font-semibold text-slate-900">{suggestion.suggestion}</span>
+                        <div className="space-y-3">
+                          <div className="flex flex-wrap items-center gap-2 text-sm">
+                            <span className="line-through text-brand-700/30 italic">{suggestion.original}</span>
+                            <ChevronRight size={14} className="text-brand-200" />
+                            <span className="font-bold text-brand-700">{suggestion.suggestion}</span>
                           </div>
-                          <p className="text-xs text-slate-500 leading-relaxed">
-                            {suggestion.explanation}
+                          <p className="text-xs text-brand-700/60 leading-relaxed font-medium italic">
+                            "{suggestion.explanation}"
                           </p>
                         </div>
                       </motion.div>
@@ -304,28 +326,58 @@ export default function App() {
               )}
             </div>
             
-            <div className="p-4 border-t border-slate-100 bg-slate-50/30">
-              <p className="text-[10px] text-slate-400 text-center">
-                Powered by Gemini AI • Optimized for Indian Vernacular Languages
-              </p>
+            <div className="p-6 border-t border-brand-50 bg-brand-50/10">
+              <div className="flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand-500/40">
+                <Sparkles size={10} />
+                <span>Crafted with Vani AI</span>
+              </div>
             </div>
           </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="py-8 px-4 border-t border-slate-200 bg-white">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-slate-500">
-            © 2026 Vani AI Assistant. Built for the Indian linguistic ecosystem.
+      <footer className="py-16 px-6 border-t border-brand-100 bg-white">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+          <div className="md:col-span-2 space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center text-white">
+                <Sparkles size={18} />
+              </div>
+              <h1 className="text-xl font-bold tracking-tight text-brand-700">Vani</h1>
+            </div>
+            <p className="text-sm text-brand-700/50 max-w-xs leading-relaxed">
+              Empowering the next billion users to communicate effectively in their native tongue. Vani is built with deep respect for India's linguistic diversity.
+            </p>
+          </div>
+          <div className="space-y-4">
+            <h4 className="text-xs font-black uppercase tracking-widest text-brand-700">Product</h4>
+            <ul className="space-y-2">
+              <li><a href="#" className="text-sm text-brand-700/50 hover:text-brand-700 transition-colors">Features</a></li>
+              <li><a href="#" className="text-sm text-brand-700/50 hover:text-brand-700 transition-colors">Languages</a></li>
+              <li><a href="#" className="text-sm text-brand-700/50 hover:text-brand-700 transition-colors">Pricing</a></li>
+            </ul>
+          </div>
+          <div className="space-y-4">
+            <h4 className="text-xs font-black uppercase tracking-widest text-brand-700">Company</h4>
+            <ul className="space-y-2">
+              <li><a href="#" className="text-sm text-brand-700/50 hover:text-brand-700 transition-colors">About</a></li>
+              <li><a href="#" className="text-sm text-brand-700/50 hover:text-brand-700 transition-colors">Privacy</a></li>
+              <li><a href="#" className="text-sm text-brand-700/50 hover:text-brand-700 transition-colors">Terms</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className="max-w-6xl mx-auto mt-16 pt-8 border-t border-brand-50 flex justify-between items-center">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-brand-700/30">
+            © 2026 Vani Linguistic AI. All rights reserved.
           </p>
           <div className="flex gap-6">
-            <a href="#" className="text-sm text-slate-400 hover:text-slate-600">Privacy</a>
-            <a href="#" className="text-sm text-slate-400 hover:text-slate-600">Terms</a>
-            <a href="#" className="text-sm text-slate-400 hover:text-slate-600">Feedback</a>
+            <div className="w-2 h-2 bg-brand-500 rounded-full animate-pulse"></div>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-brand-700/30">System Operational</span>
           </div>
         </div>
       </footer>
     </div>
   );
 }
+
