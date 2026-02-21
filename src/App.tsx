@@ -16,7 +16,9 @@ import {
   Type as TypeIcon,
   MessageSquare,
   Loader2,
-  Check
+  Check,
+  Mic,
+  MicOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { analyzeText, type AnalysisResult, type Suggestion } from './services/geminiService';
@@ -28,14 +30,24 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Add SpeechRecognition type for TS
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 export default function App() {
   const [text, setText] = useState('');
   const [language, setLanguage] = useState(INDIAN_LANGUAGES[0]);
   const [tone, setTone] = useState(TONES[0]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   const handleAnalyze = async () => {
     if (!text.trim()) return;
@@ -65,6 +77,75 @@ export default function App() {
     setResult(null);
     setError(null);
   };
+
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setError("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    
+    // Map our language codes to BCP 47 tags if possible
+    // Most Indian languages follow lang-IN
+    recognition.lang = `${language.code}-IN`;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      setError(null);
+    };
+
+    recognition.onresult = (event: any) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+
+      if (finalTranscript) {
+        setText(prev => prev + (prev.length > 0 ? ' ' : '') + finalTranscript);
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error', event.error);
+      setIsListening(false);
+      if (event.error === 'not-allowed') {
+        setError("Microphone access denied. Please check your browser permissions.");
+      } else {
+        setError(`Speech recognition error: ${event.error}`);
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  }, [isListening, language.code]);
+
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col font-sans selection:bg-brand-100 selection:text-brand-700 relative">
@@ -138,6 +219,19 @@ export default function App() {
 
               <div className="flex gap-2">
                 <button 
+                  onClick={toggleListening}
+                  className={cn(
+                    "p-2.5 rounded-full transition-all flex items-center gap-2",
+                    isListening 
+                      ? "bg-red-50 text-red-500 animate-pulse" 
+                      : "text-brand-500/40 hover:text-brand-500 hover:bg-brand-50"
+                  )}
+                  title={isListening ? "Stop Listening" : "Start Voice Typing"}
+                >
+                  {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+                  {isListening && <span className="text-xs font-bold uppercase tracking-widest">Listening</span>}
+                </button>
+                <button 
                   onClick={handleReset}
                   className="p-2.5 text-brand-500/40 hover:text-brand-500 hover:bg-brand-50 rounded-full transition-all"
                   title="Reset"
@@ -185,6 +279,7 @@ export default function App() {
               </div>
             </div>
           </div>
+
 
           {error && (
             <motion.div 
