@@ -18,7 +18,9 @@ import {
   Loader2,
   Check,
   Mic,
-  MicOff
+  MicOff,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { analyzeText, type AnalysisResult, type Suggestion } from './services/geminiService';
@@ -47,7 +49,27 @@ export default function App() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('vani-theme');
+      if (saved === 'dark' || saved === 'light') return saved;
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return 'light';
+  });
   const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('vani-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
   const handleAnalyze = async () => {
     if (!text.trim()) return;
@@ -164,12 +186,19 @@ export default function App() {
           </div>
           
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#" className="text-sm font-medium text-brand-700/60 hover:text-brand-700 transition-colors">Workspace</a>
-            <a href="#" className="text-sm font-medium text-brand-700/60 hover:text-brand-700 transition-colors">Linguistic Guide</a>
-            <a href="#" className="text-sm font-medium text-brand-700/60 hover:text-brand-700 transition-colors">API</a>
+            <a href="#" className="text-sm font-medium text-brand-700/60 hover:text-brand-700 dark:hover:text-brand-500 transition-colors">Workspace</a>
+            <a href="#" className="text-sm font-medium text-brand-700/60 hover:text-brand-700 dark:hover:text-brand-500 transition-colors">Linguistic Guide</a>
+            <a href="#" className="text-sm font-medium text-brand-700/60 hover:text-brand-700 dark:hover:text-brand-500 transition-colors">API</a>
           </nav>
 
           <div className="flex items-center gap-4">
+            <button
+              onClick={toggleTheme}
+              className="p-2.5 text-brand-700/60 hover:text-brand-700 hover:bg-brand-50 dark:hover:bg-brand-100 rounded-full transition-all"
+              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            >
+              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
             <span className="text-xs font-bold px-3 py-1 bg-brand-100 text-brand-700 rounded-full">Beta</span>
           </div>
         </div>
@@ -187,14 +216,14 @@ export default function App() {
             </p>
           </div>
 
-          <div className="bg-white rounded-[32px] shadow-2xl shadow-black/[0.03] border border-brand-100 overflow-hidden transition-all duration-500 hover:shadow-black/[0.05]">
+          <div className="bg-white dark:bg-brand-50 rounded-[32px] shadow-2xl shadow-black/[0.03] border border-brand-100 overflow-hidden transition-all duration-500 hover:shadow-black/[0.05]">
             <div className="p-5 border-b border-brand-50 flex flex-wrap gap-4 items-center justify-between bg-brand-50/20">
               <div className="flex gap-3">
                 <div className="relative">
                   <select 
                     value={language.code}
                     onChange={(e) => setLanguage(INDIAN_LANGUAGES.find(l => l.code === e.target.value) || INDIAN_LANGUAGES[0])}
-                    className="appearance-none text-sm font-semibold bg-white border border-brand-100 rounded-full pl-4 pr-10 py-2 focus:outline-none focus:ring-4 focus:ring-brand-500/10 transition-all cursor-pointer hover:border-brand-200"
+                    className="appearance-none text-sm font-semibold bg-white dark:bg-brand-50 border border-brand-100 rounded-full pl-4 pr-10 py-2 focus:outline-none focus:ring-4 focus:ring-brand-500/10 transition-all cursor-pointer hover:border-brand-200"
                   >
                     {INDIAN_LANGUAGES.map(lang => (
                       <option key={lang.code} value={lang.code}>{lang.name} ({lang.native})</option>
@@ -207,7 +236,7 @@ export default function App() {
                   <select 
                     value={tone.id}
                     onChange={(e) => setTone(TONES.find(t => t.id === e.target.value) || TONES[0])}
-                    className="appearance-none text-sm font-semibold bg-white border border-brand-100 rounded-full pl-4 pr-10 py-2 focus:outline-none focus:ring-4 focus:ring-brand-500/10 transition-all cursor-pointer hover:border-brand-200"
+                    className="appearance-none text-sm font-semibold bg-white dark:bg-brand-50 border border-brand-100 rounded-full pl-4 pr-10 py-2 focus:outline-none focus:ring-4 focus:ring-brand-500/10 transition-all cursor-pointer hover:border-brand-200"
                   >
                     {TONES.map(t => (
                       <option key={t.id} value={t.id}>{t.name} Tone</option>
@@ -223,8 +252,8 @@ export default function App() {
                   className={cn(
                     "p-2.5 rounded-full transition-all flex items-center gap-2",
                     isListening 
-                      ? "bg-red-50 text-red-500 animate-pulse" 
-                      : "text-brand-500/40 hover:text-brand-500 hover:bg-brand-50"
+                      ? "bg-red-50 dark:bg-red-900/20 text-red-500 animate-pulse" 
+                      : "text-brand-500/40 hover:text-brand-50 hover:bg-brand-50 dark:hover:bg-brand-100"
                   )}
                   title={isListening ? "Stop Listening" : "Start Voice Typing"}
                 >
@@ -233,7 +262,7 @@ export default function App() {
                 </button>
                 <button 
                   onClick={handleReset}
-                  className="p-2.5 text-brand-500/40 hover:text-brand-500 hover:bg-brand-50 rounded-full transition-all"
+                  className="p-2.5 text-brand-500/40 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-100 rounded-full transition-all"
                   title="Reset"
                 >
                   <RotateCcw size={18} />
@@ -246,7 +275,7 @@ export default function App() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 placeholder={`Begin writing in ${language.name}...`}
-                className="w-full h-[400px] p-8 text-xl leading-relaxed resize-none focus:outline-none placeholder:text-brand-100 font-medium"
+                className="w-full h-[400px] p-8 text-xl leading-relaxed resize-none focus:outline-none placeholder:text-brand-100 font-medium bg-transparent"
                 style={{ direction: 'ltr' }}
               />
               
@@ -285,7 +314,7 @@ export default function App() {
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="p-5 bg-red-50 border border-red-100 rounded-[24px] flex items-start gap-4 text-red-700"
+              className="p-5 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-[24px] flex items-start gap-4 text-red-700 dark:text-red-400"
             >
               <AlertCircle size={22} className="shrink-0 mt-0.5" />
               <p className="text-sm font-medium">{error}</p>
@@ -301,7 +330,7 @@ export default function App() {
                 exit={{ opacity: 0, y: 30 }}
                 className="space-y-6"
               >
-                <div className="bg-white rounded-[32px] shadow-2xl shadow-black/[0.03] border border-brand-100 overflow-hidden">
+                <div className="bg-white dark:bg-brand-50 rounded-[32px] shadow-2xl shadow-black/[0.03] border border-brand-100 overflow-hidden">
                   <div className="p-5 border-b border-brand-50 flex items-center justify-between bg-brand-50/10">
                     <div className="flex items-center gap-3 text-brand-600 font-bold">
                       <CheckCircle2 size={20} />
@@ -309,7 +338,7 @@ export default function App() {
                     </div>
                     <button 
                       onClick={handleCopy}
-                      className="flex items-center gap-2 px-5 py-2 text-xs font-bold uppercase tracking-widest text-brand-600 hover:bg-brand-50 rounded-full border border-brand-100 transition-all"
+                      className="flex items-center gap-2 px-5 py-2 text-xs font-bold uppercase tracking-widest text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-100 rounded-full border border-brand-100 transition-all"
                     >
                       {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
                       {copied ? 'Copied' : 'Copy Text'}
@@ -326,7 +355,7 @@ export default function App() {
 
         {/* Right Column: Suggestions & Insights */}
         <div className="lg:col-span-5 space-y-8">
-          <div className="bg-white rounded-[32px] shadow-2xl shadow-black/[0.03] border border-brand-100 flex flex-col h-full min-h-[500px]">
+          <div className="bg-white dark:bg-brand-50 rounded-[32px] shadow-2xl shadow-black/[0.03] border border-brand-100 flex flex-col h-full min-h-[500px]">
             <div className="p-6 border-b border-brand-50 flex items-center gap-3 bg-brand-50/10">
               <MessageSquare size={20} className="text-brand-500" />
               <h2 className="font-bold text-lg text-brand-700">Linguistic Insights</h2>
@@ -335,7 +364,7 @@ export default function App() {
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {!result && !isAnalyzing && (
                 <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-6">
-                  <div className="w-20 h-20 bg-brand-50 rounded-full flex items-center justify-center text-brand-200">
+                  <div className="w-20 h-20 bg-brand-50 dark:bg-brand-100/10 rounded-full flex items-center justify-center text-brand-200 dark:text-brand-500">
                     <TypeIcon size={40} />
                   </div>
                   <div className="space-y-2">
@@ -349,8 +378,8 @@ export default function App() {
                 <div className="space-y-6">
                   {[1, 2, 3].map(i => (
                     <div key={i} className="animate-pulse space-y-3">
-                      <div className="h-3 bg-brand-50 rounded-full w-1/3"></div>
-                      <div className="h-24 bg-brand-50/50 rounded-[24px]"></div>
+                      <div className="h-3 bg-brand-100 dark:bg-brand-100/20 rounded-full w-1/3"></div>
+                      <div className="h-24 bg-brand-50/50 dark:bg-brand-100/10 rounded-[24px]"></div>
                     </div>
                   ))}
                 </div>
@@ -361,7 +390,7 @@ export default function App() {
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="p-6 bg-brand-50/50 border border-brand-100 rounded-[24px] relative overflow-hidden"
+                    className="p-6 bg-brand-50/50 dark:bg-brand-100/10 border border-brand-100 rounded-[24px] relative overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 p-4 opacity-10">
                       <Info size={48} />
@@ -386,19 +415,19 @@ export default function App() {
                         transition={{ delay: idx * 0.1 }}
                         className={cn(
                           "p-5 rounded-[24px] border transition-all hover:translate-x-1",
-                          suggestion.type === 'grammar' && "bg-blue-50/20 border-blue-100/50",
-                          suggestion.type === 'spelling' && "bg-red-50/20 border-red-100/50",
-                          suggestion.type === 'style' && "bg-purple-50/20 border-purple-100/50",
-                          suggestion.type === 'tone' && "bg-orange-50/20 border-orange-100/50"
+                          suggestion.type === 'grammar' && "bg-blue-50/20 border-blue-100/50 dark:bg-blue-900/10 dark:border-blue-900/30",
+                          suggestion.type === 'spelling' && "bg-red-50/20 border-red-100/50 dark:bg-red-900/10 dark:border-red-900/30",
+                          suggestion.type === 'style' && "bg-purple-50/20 border-purple-100/50 dark:bg-purple-900/10 dark:border-purple-900/30",
+                          suggestion.type === 'tone' && "bg-orange-50/20 border-orange-100/50 dark:bg-orange-900/10 dark:border-orange-900/30"
                         )}
                       >
                         <div className="flex items-center justify-between mb-3">
                           <span className={cn(
                             "text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full",
-                            suggestion.type === 'grammar' && "bg-blue-100 text-blue-700",
-                            suggestion.type === 'spelling' && "bg-red-100 text-red-700",
-                            suggestion.type === 'style' && "bg-purple-100 text-purple-700",
-                            suggestion.type === 'tone' && "bg-orange-100 text-orange-700"
+                            suggestion.type === 'grammar' && "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+                            suggestion.type === 'spelling' && "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+                            suggestion.type === 'style' && "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+                            suggestion.type === 'tone' && "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"
                           )}>
                             {suggestion.type}
                           </span>
@@ -432,7 +461,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="py-16 px-6 border-t border-brand-100 bg-white">
+      <footer className="py-16 px-6 border-t border-brand-100 bg-white dark:bg-brand-50">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="md:col-span-2 space-y-6">
             <div className="flex items-center gap-3">
