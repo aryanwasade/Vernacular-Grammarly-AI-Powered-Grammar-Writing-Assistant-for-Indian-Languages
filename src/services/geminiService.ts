@@ -1,17 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-let aiInstance: GoogleGenAI | null = null;
-
-function getAI() {
-  if (!aiInstance) {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("Gemini API key is not configured. Please set VITE_GEMINI_API_KEY in your environment.");
-    }
-    aiInstance = new GoogleGenAI({ apiKey });
-  }
-  return aiInstance;
-}
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export interface Suggestion {
   original: string;
@@ -27,7 +16,6 @@ export interface AnalysisResult {
 }
 
 export async function analyzeText(text: string, language: string, tone: string): Promise<AnalysisResult> {
-  const ai = getAI();
   const model = "gemini-3.1-pro-preview";
   
   const systemInstruction = `You are an expert linguistic assistant for Indian vernacular languages. 
