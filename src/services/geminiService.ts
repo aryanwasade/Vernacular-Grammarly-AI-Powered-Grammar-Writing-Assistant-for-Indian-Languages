@@ -1,17 +1,6 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type, Modality } from "@google/genai";
 
-let aiInstance: GoogleGenAI | null = null;
-
-function getAI() {
-  if (!aiInstance) {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined);
-    if (!apiKey) {
-      throw new Error("Gemini API key is missing. If you are on Vercel, add VITE_GEMINI_API_KEY to your Environment Variables. If you are in AI Studio, ensure your Gemini API key is set in the Secrets panel.");
-    }
-    aiInstance = new GoogleGenAI({ apiKey });
-  }
-  return aiInstance;
-}
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
 export interface Suggestion {
   original: string;
@@ -27,7 +16,6 @@ export interface AnalysisResult {
 }
 
 export async function analyzeText(text: string, language: string, tone: string): Promise<AnalysisResult> {
-  const ai = getAI();
   const model = "gemini-3.1-pro-preview";
   
   const systemInstruction = `You are an expert linguistic assistant for Indian vernacular languages. 
@@ -90,4 +78,75 @@ Return the result in JSON format with the following structure:
     console.error("Failed to parse Gemini response", e);
     throw new Error("Failed to analyze text. Please try again.");
   }
+}
+
+export interface TranslationResult {
+  translatedText: string;
+  transliteration?: string;
+  detectedLanguage?: string;
+}
+
+export async function translateText(text: string, targetLanguage: string): Promise<TranslationResult> {
+  const model = "gemini-3-flash-preview";
+  
+  const systemInstruction = `You are a professional translator specializing in Indian languages.
+Translate the provided text into ${targetLanguage}.
+Also provide a transliteration (Roman script) of the translated text if the target language uses a non-Latin script.
+Detect the source language automatically.
+
+Return the result in JSON format:
+{
+  "translatedText": "The translated text in the native script",
+  "transliteration": "The transliteration in Roman script (optional)",
+  "detectedLanguage": "The name of the detected source language in English"
+}`;
+
+  const response = await ai.models.generateContent({
+    model,
+    contents: [{ parts: [{ text }] }],
+    config: {
+      systemInstruction,
+      responseMimeType: "application/json",
+      responseSchema: {
+        type: Type.OBJECT,
+        properties: {
+          translatedText: { type: Type.STRING },
+          transliteration: { type: Type.STRING },
+          detectedLanguage: { type: Type.STRING }
+        },
+        required: ["translatedText", "detectedLanguage"]
+      }
+    }
+  });
+
+  try {
+    return JSON.parse(response.text || "{}") as TranslationResult;
+  } catch (e) {
+    console.error("Failed to parse translation response", e);
+    throw new Error("Failed to translate text.");
+  }
+}
+
+export async function generateSpeech(text: string, voiceName: string = 'Kore'): Promise<string> {
+  const model = "gemini-2.5-flash-preview-tts";
+  
+  const response = await ai.models.generateContent({
+    model,
+    contents: [{ parts: [{ text }] }],
+    config: {
+      responseModalities: [Modality.AUDIO],
+      speechConfig: {
+        voiceConfig: {
+          prebuiltVoiceConfig: { voiceName },
+        },
+      },
+    },
+  });
+
+  const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+  if (!base64Audio) {
+    throw new Error("Failed to generate speech audio.");
+  }
+  
+  return base64Audio;
 }

@@ -20,10 +20,14 @@ import {
   Mic,
   MicOff,
   Sun,
-  Moon
+  Moon,
+  Volume2,
+  ArrowRightLeft,
+  Clipboard,
+  Languages as LanguagesIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { analyzeText, type AnalysisResult, type Suggestion } from './services/geminiService';
+import { analyzeText, translateText, generateSpeech, type AnalysisResult, type Suggestion, type TranslationResult } from './services/geminiService';
 import { INDIAN_LANGUAGES, TONES } from './constants';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -41,12 +45,16 @@ declare global {
 }
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState<'refine' | 'translate'>('translate');
   const [text, setText] = useState('');
   const [language, setLanguage] = useState(INDIAN_LANGUAGES[0]);
   const [tone, setTone] = useState(TONES[0]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [translationResult, setTranslationResult] = useState<TranslationResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -86,9 +94,40 @@ export default function App() {
     }
   };
 
-  const handleCopy = () => {
-    if (result?.correctedText) {
-      navigator.clipboard.writeText(result.correctedText);
+  const handleTranslate = async () => {
+    if (!text.trim()) return;
+    
+    setIsTranslating(true);
+    setError(null);
+    try {
+      const data = await translateText(text, language.name);
+      setTranslationResult(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  const handleTTS = async () => {
+    if (!translationResult?.translatedText) return;
+    
+    setIsPlaying(true);
+    try {
+      const base64 = await generateSpeech(translationResult.translatedText);
+      const audio = new Audio(`data:audio/mp3;base64,${base64}`);
+      audio.onended = () => setIsPlaying(false);
+      await audio.play();
+    } catch (err) {
+      setError("Failed to play audio.");
+      setIsPlaying(false);
+    }
+  };
+
+  const handleCopy = (content?: string) => {
+    const textToCopy = content || result?.correctedText || translationResult?.translatedText;
+    if (textToCopy) {
+      navigator.clipboard.writeText(textToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -97,6 +136,7 @@ export default function App() {
   const handleReset = () => {
     setText('');
     setResult(null);
+    setTranslationResult(null);
     setError(null);
   };
 
@@ -186,9 +226,24 @@ export default function App() {
           </div>
           
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#" className="text-sm font-medium text-brand-700/60 hover:text-brand-700 dark:hover:text-brand-500 transition-colors">Workspace</a>
-            <a href="#" className="text-sm font-medium text-brand-700/60 hover:text-brand-700 dark:hover:text-brand-500 transition-colors">Linguistic Guide</a>
-            <a href="#" className="text-sm font-medium text-brand-700/60 hover:text-brand-700 dark:hover:text-brand-500 transition-colors">API</a>
+            <button 
+              onClick={() => setActiveTab('translate')}
+              className={cn(
+                "text-sm font-medium transition-colors",
+                activeTab === 'translate' ? "text-brand-700" : "text-brand-700/60 hover:text-brand-700"
+              )}
+            >
+              Translator
+            </button>
+            <button 
+              onClick={() => setActiveTab('refine')}
+              className={cn(
+                "text-sm font-medium transition-colors",
+                activeTab === 'refine' ? "text-brand-700" : "text-brand-700/60 hover:text-brand-700"
+              )}
+            >
+              Writing Assistant
+            </button>
           </nav>
 
           <div className="flex items-center gap-4">
@@ -209,16 +264,30 @@ export default function App() {
         <div className="lg:col-span-7 space-y-8">
           <div className="space-y-4">
             <h2 className="text-5xl md:text-6xl font-bold text-brand-700 leading-[1.1] tracking-tight">
-              Refine your <span className="italic font-normal font-serif">vernacular</span> voice.
+              {activeTab === 'translate' ? (
+                <>Bridge the <span className="italic font-normal font-serif">language</span> gap.</>
+              ) : (
+                <>Refine your <span className="italic font-normal font-serif">vernacular</span> voice.</>
+              )}
             </h2>
             <p className="text-lg text-brand-700/60 max-w-lg leading-relaxed">
-              Vani understands the nuances of Indian languages, helping you write with clarity, precision, and cultural authenticity.
+              {activeTab === 'translate' 
+                ? "Seamlessly translate text from any language into India's rich vernacular scripts with AI precision."
+                : "Vani understands the nuances of Indian languages, helping you write with clarity, precision, and cultural authenticity."}
             </p>
           </div>
 
           <div className="bg-white dark:bg-brand-50 rounded-[32px] shadow-2xl shadow-black/[0.03] border border-brand-100 overflow-hidden transition-all duration-500 hover:shadow-black/[0.05]">
             <div className="p-5 border-b border-brand-50 flex flex-wrap gap-4 items-center justify-between bg-brand-50/20">
               <div className="flex gap-3">
+                {activeTab === 'translate' && (
+                  <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-brand-50 border border-brand-100 rounded-full text-sm font-semibold text-brand-700/60">
+                    Auto-detect
+                  </div>
+                )}
+                
+                {activeTab === 'translate' && <ArrowRightLeft size={16} className="text-brand-200 self-center" />}
+
                 <div className="relative">
                   <select 
                     value={language.code}
@@ -229,21 +298,23 @@ export default function App() {
                       <option key={lang.code} value={lang.code}>{lang.name} ({lang.native})</option>
                     ))}
                   </select>
-                  <Languages size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-500 pointer-events-none" />
+                  <LanguagesIcon size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-500 pointer-events-none" />
                 </div>
 
-                <div className="relative">
-                  <select 
-                    value={tone.id}
-                    onChange={(e) => setTone(TONES.find(t => t.id === e.target.value) || TONES[0])}
-                    className="appearance-none text-sm font-semibold bg-white dark:bg-brand-50 border border-brand-100 rounded-full pl-4 pr-10 py-2 focus:outline-none focus:ring-4 focus:ring-brand-500/10 transition-all cursor-pointer hover:border-brand-200"
-                  >
-                    {TONES.map(t => (
-                      <option key={t.id} value={t.id}>{t.name} Tone</option>
-                    ))}
-                  </select>
-                  <TypeIcon size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-500 pointer-events-none" />
-                </div>
+                {activeTab === 'refine' && (
+                  <div className="relative">
+                    <select 
+                      value={tone.id}
+                      onChange={(e) => setTone(TONES.find(t => t.id === e.target.value) || TONES[0])}
+                      className="appearance-none text-sm font-semibold bg-white dark:bg-brand-50 border border-brand-100 rounded-full pl-4 pr-10 py-2 focus:outline-none focus:ring-4 focus:ring-brand-500/10 transition-all cursor-pointer hover:border-brand-200"
+                    >
+                      {TONES.map(t => (
+                        <option key={t.id} value={t.id}>{t.name} Tone</option>
+                      ))}
+                    </select>
+                    <TypeIcon size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-brand-500 pointer-events-none" />
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2">
@@ -274,7 +345,7 @@ export default function App() {
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder={`Begin writing in ${language.name}...`}
+                placeholder={activeTab === 'translate' ? "Enter text to translate..." : `Begin writing in ${language.name}...`}
                 className="w-full h-[400px] p-8 text-xl leading-relaxed resize-none focus:outline-none placeholder:text-brand-100 font-medium bg-transparent"
                 style={{ direction: 'ltr' }}
               />
@@ -284,24 +355,24 @@ export default function App() {
                   {text.length} chars
                 </span>
                 <button
-                  onClick={handleAnalyze}
-                  disabled={isAnalyzing || !text.trim()}
+                  onClick={activeTab === 'translate' ? handleTranslate : handleAnalyze}
+                  disabled={isAnalyzing || isTranslating || !text.trim()}
                   className={cn(
                     "flex items-center gap-2 px-8 py-3.5 rounded-full font-bold transition-all shadow-xl",
-                    isAnalyzing || !text.trim() 
+                    (isAnalyzing || isTranslating || !text.trim())
                       ? "bg-brand-50 text-brand-200 cursor-not-allowed shadow-none" 
                       : "bg-brand-500 text-white hover:bg-brand-600 active:scale-95 shadow-brand-500/20"
                   )}
                 >
-                  {isAnalyzing ? (
+                  {isAnalyzing || isTranslating ? (
                     <>
                       <Loader2 size={20} className="animate-spin" />
-                      Refining...
+                      {activeTab === 'translate' ? 'Translating...' : 'Refining...'}
                     </>
                   ) : (
                     <>
-                      <Sparkles size={20} />
-                      Refine Writing
+                      {activeTab === 'translate' ? <LanguagesIcon size={20} /> : <Sparkles size={20} />}
+                      {activeTab === 'translate' ? 'Translate' : 'Refine Writing'}
                     </>
                   )}
                 </button>
@@ -323,7 +394,7 @@ export default function App() {
 
           {/* Results Display */}
           <AnimatePresence>
-            {result && (
+            {(result || translationResult) && (
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -333,19 +404,40 @@ export default function App() {
                 <div className="bg-white dark:bg-brand-50 rounded-[32px] shadow-2xl shadow-black/[0.03] border border-brand-100 overflow-hidden">
                   <div className="p-5 border-b border-brand-50 flex items-center justify-between bg-brand-50/10">
                     <div className="flex items-center gap-3 text-brand-600 font-bold">
-                      <CheckCircle2 size={20} />
-                      <span className="text-sm uppercase tracking-widest">Polished Version</span>
+                      {activeTab === 'translate' ? <LanguagesIcon size={20} /> : <CheckCircle2 size={20} />}
+                      <span className="text-sm uppercase tracking-widest">
+                        {activeTab === 'translate' ? 'Translation' : 'Polished Version'}
+                      </span>
                     </div>
-                    <button 
-                      onClick={handleCopy}
-                      className="flex items-center gap-2 px-5 py-2 text-xs font-bold uppercase tracking-widest text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-100 rounded-full border border-brand-100 transition-all"
-                    >
-                      {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
-                      {copied ? 'Copied' : 'Copy Text'}
-                    </button>
+                    <div className="flex gap-2">
+                      {activeTab === 'translate' && (
+                        <button 
+                          onClick={handleTTS}
+                          disabled={isPlaying}
+                          className="p-2 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-100 rounded-full border border-brand-100 transition-all disabled:opacity-50"
+                          title="Listen"
+                        >
+                          <Volume2 size={18} className={isPlaying ? "animate-pulse" : ""} />
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleCopy()}
+                        className="flex items-center gap-2 px-5 py-2 text-xs font-bold uppercase tracking-widest text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-100 rounded-full border border-brand-100 transition-all"
+                      >
+                        {copied ? <Check size={14} className="text-green-600" /> : <Copy size={14} />}
+                        {copied ? 'Copied' : 'Copy Text'}
+                      </button>
+                    </div>
                   </div>
-                  <div className="p-8 text-xl leading-relaxed text-brand-700 whitespace-pre-wrap font-medium">
-                    {result.correctedText}
+                  <div className="p-8 space-y-4">
+                    <div className="text-3xl leading-relaxed text-brand-700 whitespace-pre-wrap font-medium">
+                      {activeTab === 'translate' ? translationResult?.translatedText : result?.correctedText}
+                    </div>
+                    {activeTab === 'translate' && translationResult?.transliteration && (
+                      <div className="text-lg text-brand-700/40 italic font-serif">
+                        {translationResult.transliteration}
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -357,24 +449,30 @@ export default function App() {
         <div className="lg:col-span-5 space-y-8">
           <div className="bg-white dark:bg-brand-50 rounded-[32px] shadow-2xl shadow-black/[0.03] border border-brand-100 flex flex-col h-full min-h-[500px]">
             <div className="p-6 border-b border-brand-50 flex items-center gap-3 bg-brand-50/10">
-              <MessageSquare size={20} className="text-brand-500" />
-              <h2 className="font-bold text-lg text-brand-700">Linguistic Insights</h2>
+              {activeTab === 'translate' ? <Info size={20} className="text-brand-500" /> : <MessageSquare size={20} className="text-brand-500" />}
+              <h2 className="font-bold text-lg text-brand-700">
+                {activeTab === 'translate' ? 'Translation Details' : 'Linguistic Insights'}
+              </h2>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {!result && !isAnalyzing && (
+              {!(result || translationResult) && !(isAnalyzing || isTranslating) && (
                 <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-6">
                   <div className="w-20 h-20 bg-brand-50 dark:bg-brand-100/10 rounded-full flex items-center justify-center text-brand-200 dark:text-brand-500">
-                    <TypeIcon size={40} />
+                    {activeTab === 'translate' ? <LanguagesIcon size={40} /> : <TypeIcon size={40} />}
                   </div>
                   <div className="space-y-2">
                     <p className="text-brand-700 font-bold text-lg">Awaiting Input</p>
-                    <p className="text-sm text-brand-700/40 max-w-[200px] mx-auto">Your linguistic analysis and suggestions will appear here.</p>
+                    <p className="text-sm text-brand-700/40 max-w-[200px] mx-auto">
+                      {activeTab === 'translate' 
+                        ? "Your translation details and source detection will appear here."
+                        : "Your linguistic analysis and suggestions will appear here."}
+                    </p>
                   </div>
                 </div>
               )}
 
-              {isAnalyzing && (
+              {(isAnalyzing || isTranslating) && (
                 <div className="space-y-6">
                   {[1, 2, 3].map(i => (
                     <div key={i} className="animate-pulse space-y-3">
@@ -385,7 +483,39 @@ export default function App() {
                 </div>
               )}
 
-              {result && (
+              {activeTab === 'translate' && translationResult && (
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="space-y-6"
+                >
+                  <div className="p-6 bg-brand-50/50 dark:bg-brand-100/10 border border-brand-100 rounded-[24px]">
+                    <div className="flex items-center gap-2 text-brand-600 font-bold mb-4">
+                      <span className="text-xs uppercase tracking-widest">Source Language</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="px-4 py-2 bg-brand-500 text-white rounded-full text-sm font-bold">
+                        {translationResult.detectedLanguage}
+                      </div>
+                      <ChevronRight size={16} className="text-brand-200" />
+                      <div className="px-4 py-2 bg-brand-100 text-brand-700 rounded-full text-sm font-bold">
+                        {language.name}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-6 bg-brand-50/50 dark:bg-brand-100/10 border border-brand-100 rounded-[24px]">
+                    <div className="flex items-center gap-2 text-brand-600 font-bold mb-2">
+                      <span className="text-xs uppercase tracking-widest">Usage Tip</span>
+                    </div>
+                    <p className="text-sm text-brand-700/60 leading-relaxed italic">
+                      "You can use the speaker icon to hear the pronunciation in {language.name}. This helps in learning the correct accent and rhythm of the language."
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'refine' && result && (
                 <>
                   <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }}
