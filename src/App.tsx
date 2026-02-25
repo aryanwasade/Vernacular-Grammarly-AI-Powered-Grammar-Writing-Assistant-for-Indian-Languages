@@ -217,7 +217,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-brand-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
-              <Sparkles size={22} />
+              <LanguagesIcon size={22} />
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-brand-700">Vani</h1>
@@ -596,7 +596,7 @@ export default function App() {
           <div className="md:col-span-2 space-y-6">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center text-white">
-                <Sparkles size={18} />
+                <LanguagesIcon size={18} />
               </div>
               <h1 className="text-xl font-bold tracking-tight text-brand-700">Vani</h1>
             </div>
