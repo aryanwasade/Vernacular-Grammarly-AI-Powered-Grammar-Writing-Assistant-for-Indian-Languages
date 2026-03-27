@@ -1,6 +1,12 @@
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+let aiInstance: GoogleGenAI | null = null;
+const getAi = () => {
+  if (!aiInstance) {
+    aiInstance = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || "missing_key" });
+  }
+  return aiInstance;
+};
 
 export interface Suggestion {
   original: string;
@@ -16,7 +22,7 @@ export interface AnalysisResult {
 }
 
 export async function analyzeText(text: string, language: string, tone: string): Promise<AnalysisResult> {
-  const model = "gemini-3.1-pro-preview";
+  const model = "gemini-3-flash-preview";
   
   const systemInstruction = `You are an expert linguistic assistant for Indian vernacular languages. 
 Your task is to analyze text in ${language} and provide grammar, spelling, and style improvements.
@@ -42,7 +48,7 @@ Return the result in JSON format with the following structure:
   "summary": "A brief summary of the changes made in English"
 }`;
 
-  const response = await ai.models.generateContent({
+  const response = await getAi().models.generateContent({
     model,
     contents: [{ parts: [{ text }] }],
     config: {
@@ -101,7 +107,7 @@ Return the result in JSON format:
   "detectedLanguage": "The name of the detected source language in English"
 }`;
 
-  const response = await ai.models.generateContent({
+  const response = await getAi().models.generateContent({
     model,
     contents: [{ parts: [{ text }] }],
     config: {
@@ -130,7 +136,7 @@ Return the result in JSON format:
 export async function generateSpeech(text: string, voiceName: string = 'Kore'): Promise<string> {
   const model = "gemini-2.5-flash-preview-tts";
   
-  const response = await ai.models.generateContent({
+  const response = await getAi().models.generateContent({
     model,
     contents: [{ parts: [{ text }] }],
     config: {

@@ -4,13 +4,13 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { 
-  Languages, 
-  Sparkles, 
-  CheckCircle2, 
-  AlertCircle, 
-  Copy, 
-  RotateCcw, 
+import {
+  Languages,
+  Sparkles,
+  CheckCircle2,
+  AlertCircle,
+  Copy,
+  RotateCcw,
   ChevronRight,
   Info,
   Type as TypeIcon,
@@ -81,7 +81,7 @@ export default function App() {
 
   const handleAnalyze = async () => {
     if (!text.trim()) return;
-    
+
     setIsAnalyzing(true);
     setError(null);
     try {
@@ -96,7 +96,7 @@ export default function App() {
 
   const handleTranslate = async () => {
     if (!text.trim()) return;
-    
+
     setIsTranslating(true);
     setError(null);
     try {
@@ -111,7 +111,7 @@ export default function App() {
 
   const handleTTS = async () => {
     if (!translationResult?.translatedText) return;
-    
+
     setIsPlaying(true);
     try {
       const base64 = await generateSpeech(translationResult.translatedText);
@@ -156,7 +156,7 @@ export default function App() {
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    
+
     // Map our language codes to BCP 47 tags if possible
     // Most Indian languages follow lang-IN
     recognition.lang = `${language.code}-IN`;
@@ -224,9 +224,9 @@ export default function App() {
               <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-brand-500/60 leading-none">Vernacular AI</p>
             </div>
           </div>
-          
+
           <nav className="hidden md:flex items-center gap-8">
-            <button 
+            <button
               onClick={() => setActiveTab('translate')}
               className={cn(
                 "text-sm font-medium transition-colors",
@@ -235,7 +235,7 @@ export default function App() {
             >
               Translator
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('refine')}
               className={cn(
                 "text-sm font-medium transition-colors",
@@ -271,7 +271,7 @@ export default function App() {
               )}
             </h2>
             <p className="text-lg text-brand-700/60 max-w-lg leading-relaxed">
-              {activeTab === 'translate' 
+              {activeTab === 'translate'
                 ? "Seamlessly translate text from any language into India's rich vernacular scripts with AI precision."
                 : "Vani understands the nuances of Indian languages, helping you write with clarity, precision, and cultural authenticity."}
             </p>
@@ -285,11 +285,11 @@ export default function App() {
                     Auto-detect
                   </div>
                 )}
-                
+
                 {activeTab === 'translate' && <ArrowRightLeft size={16} className="text-brand-200 self-center" />}
 
                 <div className="relative">
-                  <select 
+                  <select
                     value={language.code}
                     onChange={(e) => setLanguage(INDIAN_LANGUAGES.find(l => l.code === e.target.value) || INDIAN_LANGUAGES[0])}
                     className="appearance-none text-sm font-semibold bg-white dark:bg-brand-50 border border-brand-100 rounded-full pl-4 pr-10 py-2 focus:outline-none focus:ring-4 focus:ring-brand-500/10 transition-all cursor-pointer hover:border-brand-200"
@@ -303,7 +303,7 @@ export default function App() {
 
                 {activeTab === 'refine' && (
                   <div className="relative">
-                    <select 
+                    <select
                       value={tone.id}
                       onChange={(e) => setTone(TONES.find(t => t.id === e.target.value) || TONES[0])}
                       className="appearance-none text-sm font-semibold bg-white dark:bg-brand-50 border border-brand-100 rounded-full pl-4 pr-10 py-2 focus:outline-none focus:ring-4 focus:ring-brand-500/10 transition-all cursor-pointer hover:border-brand-200"
@@ -318,12 +318,12 @@ export default function App() {
               </div>
 
               <div className="flex gap-2">
-                <button 
+                <button
                   onClick={toggleListening}
                   className={cn(
                     "p-2.5 rounded-full transition-all flex items-center gap-2",
-                    isListening 
-                      ? "bg-red-50 dark:bg-red-900/20 text-red-500 animate-pulse" 
+                    isListening
+                      ? "bg-red-50 dark:bg-red-900/20 text-red-500 animate-pulse"
                       : "text-brand-500/40 hover:text-brand-50 hover:bg-brand-50 dark:hover:bg-brand-100"
                   )}
                   title={isListening ? "Stop Listening" : "Start Voice Typing"}
@@ -331,7 +331,7 @@ export default function App() {
                   {isListening ? <MicOff size={18} /> : <Mic size={18} />}
                   {isListening && <span className="text-xs font-bold uppercase tracking-widest">Listening</span>}
                 </button>
-                <button 
+                <button
                   onClick={handleReset}
                   className="p-2.5 text-brand-500/40 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-100 rounded-full transition-all"
                   title="Reset"
@@ -349,7 +349,7 @@ export default function App() {
                 className="w-full h-[400px] p-8 text-xl leading-relaxed resize-none focus:outline-none placeholder:text-brand-100 font-medium bg-transparent"
                 style={{ direction: 'ltr' }}
               />
-              
+
               <div className="absolute bottom-6 right-6 flex items-center gap-6">
                 <span className="text-[10px] uppercase tracking-widest text-brand-500/40 font-bold">
                   {text.length} chars
@@ -360,7 +360,7 @@ export default function App() {
                   className={cn(
                     "flex items-center gap-2 px-8 py-3.5 rounded-full font-bold transition-all shadow-xl",
                     (isAnalyzing || isTranslating || !text.trim())
-                      ? "bg-brand-50 text-brand-200 cursor-not-allowed shadow-none" 
+                      ? "bg-brand-50 text-brand-200 cursor-not-allowed shadow-none"
                       : "bg-brand-500 text-white hover:bg-brand-600 active:scale-95 shadow-brand-500/20"
                   )}
                 >
@@ -382,7 +382,7 @@ export default function App() {
 
 
           {error && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="p-5 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-[24px] flex items-start gap-4 text-red-700 dark:text-red-400"
@@ -411,7 +411,7 @@ export default function App() {
                     </div>
                     <div className="flex gap-2">
                       {activeTab === 'translate' && (
-                        <button 
+                        <button
                           onClick={handleTTS}
                           disabled={isPlaying}
                           className="p-2 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-100 rounded-full border border-brand-100 transition-all disabled:opacity-50"
@@ -420,7 +420,7 @@ export default function App() {
                           <Volume2 size={18} className={isPlaying ? "animate-pulse" : ""} />
                         </button>
                       )}
-                      <button 
+                      <button
                         onClick={() => handleCopy()}
                         className="flex items-center gap-2 px-5 py-2 text-xs font-bold uppercase tracking-widest text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-100 rounded-full border border-brand-100 transition-all"
                       >
@@ -464,7 +464,7 @@ export default function App() {
                   <div className="space-y-2">
                     <p className="text-brand-700 font-bold text-lg">Awaiting Input</p>
                     <p className="text-sm text-brand-700/40 max-w-[200px] mx-auto">
-                      {activeTab === 'translate' 
+                      {activeTab === 'translate'
                         ? "Your translation details and source detection will appear here."
                         : "Your linguistic analysis and suggestions will appear here."}
                     </p>
@@ -484,7 +484,7 @@ export default function App() {
               )}
 
               {activeTab === 'translate' && translationResult && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   className="space-y-6"
@@ -517,7 +517,7 @@ export default function App() {
 
               {activeTab === 'refine' && result && (
                 <>
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="p-6 bg-brand-50/50 dark:bg-brand-100/10 border border-brand-100 rounded-[24px] relative overflow-hidden"
@@ -562,7 +562,7 @@ export default function App() {
                             {suggestion.type}
                           </span>
                         </div>
-                        
+
                         <div className="space-y-3">
                           <div className="flex flex-wrap items-center gap-2 text-sm">
                             <span className="line-through text-brand-700/30 italic">{suggestion.original}</span>
@@ -579,7 +579,7 @@ export default function App() {
                 </>
               )}
             </div>
-            
+
             <div className="p-6 border-t border-brand-50 bg-brand-50/10">
               <div className="flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand-500/40">
                 <Sparkles size={10} />
