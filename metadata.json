@@ -1,5 +1,6 @@
 {
-  "name": "Vani - AI Vernacular Writing Assistant",
+  "name": "vaani - AI Vernacular Writing Assistant",
   "description": "An AI-powered translation and writing assistant for Indian languages, providing high-quality translations, transliterations, and text-to-speech.",
-  "requestFramePermissions": ["microphone"]
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

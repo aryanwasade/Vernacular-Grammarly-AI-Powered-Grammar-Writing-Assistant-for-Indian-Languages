@@ -4,13 +4,13 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import {
-  Languages,
-  Sparkles,
-  CheckCircle2,
-  AlertCircle,
-  Copy,
-  RotateCcw,
+import { 
+  Languages, 
+  Sparkles, 
+  CheckCircle2, 
+  AlertCircle, 
+  Copy, 
+  RotateCcw, 
   ChevronRight,
   Info,
   Type as TypeIcon,
@@ -24,13 +24,16 @@ import {
   Volume2,
   ArrowRightLeft,
   Clipboard,
-  Languages as LanguagesIcon
+  Languages as LanguagesIcon,
+  ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { analyzeText, translateText, generateSpeech, type AnalysisResult, type Suggestion, type TranslationResult } from './services/geminiService';
 import { INDIAN_LANGUAGES, TONES } from './constants';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { VaaniLogoMark } from './components/VaaniLogo';
+import { DownloadLogoModal } from './components/DownloadLogoModal';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -45,6 +48,7 @@ declare global {
 }
 
 export default function App() {
+  const [isLogoModalOpen, setIsLogoModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'refine' | 'translate'>('translate');
   const [text, setText] = useState('');
   const [language, setLanguage] = useState(INDIAN_LANGUAGES[0]);
@@ -59,7 +63,7 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('vani-theme');
+      const saved = localStorage.getItem('vaani-theme');
       if (saved === 'dark' || saved === 'light') return saved;
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
@@ -74,14 +78,14 @@ export default function App() {
     } else {
       root.classList.remove('dark');
     }
-    localStorage.setItem('vani-theme', theme);
+    localStorage.setItem('vaani-theme', theme);
   }, [theme]);
 
   const toggleTheme = () => setTheme(prev => prev === 'light' ? 'dark' : 'light');
 
   const handleAnalyze = async () => {
     if (!text.trim()) return;
-
+    
     setIsAnalyzing(true);
     setError(null);
     try {
@@ -96,7 +100,7 @@ export default function App() {
 
   const handleTranslate = async () => {
     if (!text.trim()) return;
-
+    
     setIsTranslating(true);
     setError(null);
     try {
@@ -111,7 +115,7 @@ export default function App() {
 
   const handleTTS = async () => {
     if (!translationResult?.translatedText) return;
-
+    
     setIsPlaying(true);
     try {
       const base64 = await generateSpeech(translationResult.translatedText);
@@ -156,7 +160,7 @@ export default function App() {
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-
+    
     // Map our language codes to BCP 47 tags if possible
     // Most Indian languages follow lang-IN
     recognition.lang = `${language.code}-IN`;
@@ -215,38 +219,52 @@ export default function App() {
       {/* Header */}
       <header className="bg-paper/80 backdrop-blur-md border-b border-brand-100 sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-brand-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
-              <LanguagesIcon size={22} />
+          <div 
+            onClick={() => setIsLogoModalOpen(true)}
+            className="flex items-center gap-3 cursor-pointer group"
+            title="Click to preview & download official logo"
+          >
+            <div className="group-hover:scale-105 transition-transform">
+              <VaaniLogoMark size={40} idPrefix="hdr" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-brand-700">Vani</h1>
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-2xl font-bold tracking-tight text-brand-700">vaani</h1>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 bg-brand-500/10 text-brand-600 rounded-md group-hover:bg-brand-500 group-hover:text-white transition-colors">Logo</span>
+              </div>
               <p className="text-[10px] uppercase tracking-[0.2em] font-bold text-brand-500/60 leading-none">Vernacular AI</p>
             </div>
           </div>
-
+          
           <nav className="hidden md:flex items-center gap-8">
-            <button
+            <button 
               onClick={() => setActiveTab('translate')}
               className={cn(
                 "text-sm font-medium transition-colors",
-                activeTab === 'translate' ? "text-brand-700" : "text-brand-700/60 hover:text-brand-700"
+                activeTab === 'translate' ? "text-brand-700 font-bold" : "text-brand-700/60 hover:text-brand-700"
               )}
             >
               Translator
             </button>
-            <button
+            <button 
               onClick={() => setActiveTab('refine')}
               className={cn(
                 "text-sm font-medium transition-colors",
-                activeTab === 'refine' ? "text-brand-700" : "text-brand-700/60 hover:text-brand-700"
+                activeTab === 'refine' ? "text-brand-700 font-bold" : "text-brand-700/60 hover:text-brand-700"
               )}
             >
               Writing Assistant
             </button>
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsLogoModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-500/10 hover:bg-brand-500/20 text-brand-700 dark:text-brand-300 rounded-full text-xs font-bold transition-all border border-brand-500/20"
+            >
+              <Sparkles size={13} className="text-brand-500" />
+              <span>Download Logo</span>
+            </button>
             <button
               onClick={toggleTheme}
               className="p-2.5 text-brand-700/60 hover:text-brand-700 hover:bg-brand-50 dark:hover:bg-brand-100 rounded-full transition-all"
@@ -271,9 +289,9 @@ export default function App() {
               )}
             </h2>
             <p className="text-lg text-brand-700/60 max-w-lg leading-relaxed">
-              {activeTab === 'translate'
+              {activeTab === 'translate' 
                 ? "Seamlessly translate text from any language into India's rich vernacular scripts with AI precision."
-                : "Vani understands the nuances of Indian languages, helping you write with clarity, precision, and cultural authenticity."}
+                : "vaani understands the nuances of Indian languages, helping you write with clarity, precision, and cultural authenticity."}
             </p>
           </div>
 
@@ -285,11 +303,11 @@ export default function App() {
                     Auto-detect
                   </div>
                 )}
-
+                
                 {activeTab === 'translate' && <ArrowRightLeft size={16} className="text-brand-200 self-center" />}
 
                 <div className="relative">
-                  <select
+                  <select 
                     value={language.code}
                     onChange={(e) => setLanguage(INDIAN_LANGUAGES.find(l => l.code === e.target.value) || INDIAN_LANGUAGES[0])}
                     className="appearance-none text-sm font-semibold bg-white dark:bg-brand-50 border border-brand-100 rounded-full pl-4 pr-10 py-2 focus:outline-none focus:ring-4 focus:ring-brand-500/10 transition-all cursor-pointer hover:border-brand-200"
@@ -303,7 +321,7 @@ export default function App() {
 
                 {activeTab === 'refine' && (
                   <div className="relative">
-                    <select
+                    <select 
                       value={tone.id}
                       onChange={(e) => setTone(TONES.find(t => t.id === e.target.value) || TONES[0])}
                       className="appearance-none text-sm font-semibold bg-white dark:bg-brand-50 border border-brand-100 rounded-full pl-4 pr-10 py-2 focus:outline-none focus:ring-4 focus:ring-brand-500/10 transition-all cursor-pointer hover:border-brand-200"
@@ -318,20 +336,20 @@ export default function App() {
               </div>
 
               <div className="flex gap-2">
-                <button
+                <button 
                   onClick={toggleListening}
                   className={cn(
                     "p-2.5 rounded-full transition-all flex items-center gap-2",
-                    isListening
-                      ? "bg-red-50 dark:bg-red-900/20 text-red-500 animate-pulse"
-                      : "text-brand-500/40 hover:text-brand-50 hover:bg-brand-50 dark:hover:bg-brand-100"
+                    isListening 
+                      ? "bg-red-50 dark:bg-red-900/20 text-red-500 animate-pulse" 
+                      : "text-brand-500/40 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-100"
                   )}
                   title={isListening ? "Stop Listening" : "Start Voice Typing"}
                 >
                   {isListening ? <MicOff size={18} /> : <Mic size={18} />}
                   {isListening && <span className="text-xs font-bold uppercase tracking-widest">Listening</span>}
                 </button>
-                <button
+                <button 
                   onClick={handleReset}
                   className="p-2.5 text-brand-500/40 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-100 rounded-full transition-all"
                   title="Reset"
@@ -345,11 +363,15 @@ export default function App() {
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder={activeTab === 'translate' ? "Enter text to translate..." : `Begin writing in ${language.name}...`}
+                placeholder={
+                  activeTab === 'translate' 
+                    ? "Enter text to translate..." 
+                    : `Begin writing in ${language.name}...`
+                }
                 className="w-full h-[400px] p-8 text-xl leading-relaxed resize-none focus:outline-none placeholder:text-brand-100 font-medium bg-transparent"
                 style={{ direction: 'ltr' }}
               />
-
+              
               <div className="absolute bottom-6 right-6 flex items-center gap-6">
                 <span className="text-[10px] uppercase tracking-widest text-brand-500/40 font-bold">
                   {text.length} chars
@@ -360,7 +382,7 @@ export default function App() {
                   className={cn(
                     "flex items-center gap-2 px-8 py-3.5 rounded-full font-bold transition-all shadow-xl",
                     (isAnalyzing || isTranslating || !text.trim())
-                      ? "bg-brand-50 text-brand-200 cursor-not-allowed shadow-none"
+                      ? "bg-brand-50 text-brand-200 cursor-not-allowed shadow-none" 
                       : "bg-brand-500 text-white hover:bg-brand-600 active:scale-95 shadow-brand-500/20"
                   )}
                 >
@@ -371,7 +393,11 @@ export default function App() {
                     </>
                   ) : (
                     <>
-                      {activeTab === 'translate' ? <LanguagesIcon size={20} /> : <Sparkles size={20} />}
+                      {activeTab === 'translate' ? (
+                        <LanguagesIcon size={20} />
+                      ) : (
+                        <Sparkles size={20} />
+                      )}
                       {activeTab === 'translate' ? 'Translate' : 'Refine Writing'}
                     </>
                   )}
@@ -382,7 +408,7 @@ export default function App() {
 
 
           {error && (
-            <motion.div
+            <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="p-5 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-[24px] flex items-start gap-4 text-red-700 dark:text-red-400"
@@ -411,7 +437,7 @@ export default function App() {
                     </div>
                     <div className="flex gap-2">
                       {activeTab === 'translate' && (
-                        <button
+                        <button 
                           onClick={handleTTS}
                           disabled={isPlaying}
                           className="p-2 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-100 rounded-full border border-brand-100 transition-all disabled:opacity-50"
@@ -420,7 +446,7 @@ export default function App() {
                           <Volume2 size={18} className={isPlaying ? "animate-pulse" : ""} />
                         </button>
                       )}
-                      <button
+                      <button 
                         onClick={() => handleCopy()}
                         className="flex items-center gap-2 px-5 py-2 text-xs font-bold uppercase tracking-widest text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-100 rounded-full border border-brand-100 transition-all"
                       >
@@ -449,7 +475,11 @@ export default function App() {
         <div className="lg:col-span-5 space-y-8">
           <div className="bg-white dark:bg-brand-50 rounded-[32px] shadow-2xl shadow-black/[0.03] border border-brand-100 flex flex-col h-full min-h-[500px]">
             <div className="p-6 border-b border-brand-50 flex items-center gap-3 bg-brand-50/10">
-              {activeTab === 'translate' ? <Info size={20} className="text-brand-500" /> : <MessageSquare size={20} className="text-brand-500" />}
+              {activeTab === 'translate' ? (
+                <Info size={20} className="text-brand-500" />
+              ) : (
+                <MessageSquare size={20} className="text-brand-500" />
+              )}
               <h2 className="font-bold text-lg text-brand-700">
                 {activeTab === 'translate' ? 'Translation Details' : 'Linguistic Insights'}
               </h2>
@@ -459,12 +489,16 @@ export default function App() {
               {!(result || translationResult) && !(isAnalyzing || isTranslating) && (
                 <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-6">
                   <div className="w-20 h-20 bg-brand-50 dark:bg-brand-100/10 rounded-full flex items-center justify-center text-brand-200 dark:text-brand-500">
-                    {activeTab === 'translate' ? <LanguagesIcon size={40} /> : <TypeIcon size={40} />}
+                    {activeTab === 'translate' ? (
+                      <LanguagesIcon size={40} />
+                    ) : (
+                      <TypeIcon size={40} />
+                    )}
                   </div>
                   <div className="space-y-2">
                     <p className="text-brand-700 font-bold text-lg">Awaiting Input</p>
                     <p className="text-sm text-brand-700/40 max-w-[200px] mx-auto">
-                      {activeTab === 'translate'
+                      {activeTab === 'translate' 
                         ? "Your translation details and source detection will appear here."
                         : "Your linguistic analysis and suggestions will appear here."}
                     </p>
@@ -484,7 +518,7 @@ export default function App() {
               )}
 
               {activeTab === 'translate' && translationResult && (
-                <motion.div
+                <motion.div 
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   className="space-y-6"
@@ -517,7 +551,7 @@ export default function App() {
 
               {activeTab === 'refine' && result && (
                 <>
-                  <motion.div
+                  <motion.div 
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="p-6 bg-brand-50/50 dark:bg-brand-100/10 border border-brand-100 rounded-[24px] relative overflow-hidden"
@@ -562,7 +596,7 @@ export default function App() {
                             {suggestion.type}
                           </span>
                         </div>
-
+                        
                         <div className="space-y-3">
                           <div className="flex flex-wrap items-center gap-2 text-sm">
                             <span className="line-through text-brand-700/30 italic">{suggestion.original}</span>
@@ -579,11 +613,11 @@ export default function App() {
                 </>
               )}
             </div>
-
+            
             <div className="p-6 border-t border-brand-50 bg-brand-50/10">
               <div className="flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-brand-500/40">
-                <Sparkles size={10} />
-                <span>Crafted with Vani AI</span>
+                <ShieldCheck size={10} />
+                <span>Crafted with vaani AI</span>
               </div>
             </div>
           </div>
@@ -594,22 +628,34 @@ export default function App() {
       <footer className="py-16 px-6 border-t border-brand-100 bg-white dark:bg-brand-50">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="md:col-span-2 space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center text-white">
-                <LanguagesIcon size={18} />
+            <div 
+              onClick={() => setIsLogoModalOpen(true)}
+              className="flex items-center gap-3 cursor-pointer group"
+              title="Download Brand Assets"
+            >
+              <div className="group-hover:scale-105 transition-transform">
+                <VaaniLogoMark size={32} idPrefix="ftr" />
               </div>
-              <h1 className="text-xl font-bold tracking-tight text-brand-700">Vani</h1>
+              <h1 className="text-xl font-bold tracking-tight text-brand-700">vaani</h1>
             </div>
             <p className="text-sm text-brand-700/50 max-w-xs leading-relaxed">
-              Empowering the next billion users to communicate effectively in their native tongue. Vani is built with deep respect for India's linguistic diversity.
+              Empowering the next billion users to communicate effectively in their native tongue. vaani is built with deep respect for India's linguistic diversity.
             </p>
           </div>
           <div className="space-y-4">
-            <h4 className="text-xs font-black uppercase tracking-widest text-brand-700">Product</h4>
+            <h4 className="text-xs font-black uppercase tracking-widest text-brand-700">Product & Brand</h4>
             <ul className="space-y-2">
+              <li>
+                <button 
+                  onClick={() => setIsLogoModalOpen(true)} 
+                  className="text-sm font-semibold text-brand-500 hover:underline flex items-center gap-1"
+                >
+                  <Sparkles size={12} />
+                  <span>Download Logo Assets</span>
+                </button>
+              </li>
               <li><a href="#" className="text-sm text-brand-700/50 hover:text-brand-700 transition-colors">Features</a></li>
               <li><a href="#" className="text-sm text-brand-700/50 hover:text-brand-700 transition-colors">Languages</a></li>
-              <li><a href="#" className="text-sm text-brand-700/50 hover:text-brand-700 transition-colors">Pricing</a></li>
             </ul>
           </div>
           <div className="space-y-4">
@@ -623,7 +669,7 @@ export default function App() {
         </div>
         <div className="max-w-6xl mx-auto mt-16 pt-8 border-t border-brand-50 flex justify-between items-center">
           <p className="text-[10px] font-bold uppercase tracking-widest text-brand-700/30">
-            © 2026 Vani Linguistic AI. All rights reserved.
+            © 2026 vaani Linguistic AI. All rights reserved.
           </p>
           <div className="flex gap-6">
             <div className="w-2 h-2 bg-brand-500 rounded-full animate-pulse"></div>
@@ -631,6 +677,12 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Logo Preview & Download Modal */}
+      <DownloadLogoModal 
+        isOpen={isLogoModalOpen} 
+        onClose={() => setIsLogoModalOpen(false)} 
+      />
     </div>
   );
 }
